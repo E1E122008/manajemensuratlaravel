@@ -1,6 +1,9 @@
 @extends('layout.main')
 
 @section('content')
+    <x-breadcrumb
+    :values="[__('Surat Perintah Perjalanan Dinas'), __('Luar Daerah')]">
+    </x-breadcrumb>
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">SPPD Luar Daerah</h5>
@@ -13,10 +16,10 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Nomor Urut</th>
+                            <th>No</th>
                             <th>Tanggal</th>
                             <th>Perihal</th>
-                            <th>Nomor SPT</th>
+                            <th>Nomor Surat</th>
                             <th>Nama yang Bertugas</th>
                             <th>Tanggal Berangkat</th>
                             <th>Tanggal Kembali</th>
@@ -24,9 +27,9 @@
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
-                        @forelse($sppds as $sppd)
+                        @forelse($sppds as $index => $sppd)
                         <tr>
-                            <td>{{ $sppd->nomor_urut }}</td>
+                            <td>{{ $index + 1 }}</td>
                             <td>{{ $sppd->tanggal->format('d/m/Y') }}</td>
                             <td>{{ $sppd->perihal }}</td>
                             <td>{{ $sppd->nomor_spt }}</td>
@@ -65,17 +68,13 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Buat SPPD Luar Negeri Baru</h5>
+                    <h5 class="modal-title">Buat SPPD Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="sppdForm" action="{{ route('sppd.foreign.store') }}" method="POST">
+                    <form id="sppdForm" action="{{ route('sppd.foreign.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Nomor Urut</label>
-                                <input type="number" class="form-control" name="nomor_urut" required>
-                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" class="form-control" name="tanggal" required>
@@ -86,7 +85,7 @@
                             <input type="text" class="form-control" name="perihal" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nomor SPT</label>
+                            <label class="form-label">Nomor Surat</label>
                             <input type="text" class="form-control" name="nomor_spt" required>
                         </div>
                         <div class="mb-3">
@@ -102,6 +101,10 @@
                                 <label class="form-label">Tanggal Kembali</label>
                                 <input type="date" class="form-control" name="tanggal_kembali" required>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lampiran</label>
+                            <input type="file" class="form-control" name="attachments[]" multiple>
                         </div>
                     </form>
                 </div>

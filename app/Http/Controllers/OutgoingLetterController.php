@@ -24,10 +24,17 @@ class OutgoingLetterController extends Controller
      */
     public function index(Request $request): View
     {
-        return view('pages.transaction.outgoing.index', [
-            'data' => Letter::outgoing()->render($request->search),
-            'search' => $request->search,
-        ]);
+        $search = $request->input('search');
+
+        $outgoingLetters = Letter::outgoing()
+            ->when($search, function ($query) use ($search) {
+                return $query->where('reference_number', 'like', "%{$search}%")
+                             ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('pages.transaction.outgoing.index', compact('outgoingLetters', 'search'));
     }
 
     /**

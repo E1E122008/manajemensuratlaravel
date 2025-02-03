@@ -13,11 +13,10 @@ class Attachment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'path',
-        'filename',
-        'extension',
-        'letter_id',
-        'user_id',
+        'file_path',
+        'file_name',
+        'attachable_id',
+        'attachable_type'
     ];
 
     protected $appends = [
@@ -28,11 +27,11 @@ class Attachment extends Model
      * @return string
      */
     public function getPathUrlAttribute(): string {
-        if (!is_null($this->path)) {
-            return $this->path;
+        if (!is_null($this->file_path)) {
+            return $this->file_path;
         }
 
-        return asset('storage/attachments/' . $this->filename);
+        return asset('storage/attachments/' . $this->file_name);
     }
 
     public function scopeType($query, LetterType $type)
@@ -56,7 +55,7 @@ class Attachment extends Model
     {
         return $query->when($search, function($query, $find) {
             return $query
-                ->where('filename', 'LIKE', '%' . $find . '%')
+                ->where('file_name', 'LIKE', '%' . $find . '%')
                 ->orWhereHas('letter', function ($query) use ($find) {
                     return $query->where('reference_number', $find);
                 });
@@ -89,5 +88,10 @@ class Attachment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function attachable()
+    {
+        return $this->morphTo();
     }
 }

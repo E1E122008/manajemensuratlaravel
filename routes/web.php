@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SppdController;
+use App\Http\Controllers\SptController;
+use App\Http\Controllers\Transaction\IncomingLetterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,8 +41,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('attachment', [\App\Http\Controllers\PageController::class, 'removeAttachment'])
         ->name('attachment.destroy');
 
-    Route::prefix('transaction')->as('transaction.')->group(function () {
-        Route::resource('incoming', \App\Http\Controllers\IncomingLetterController::class);
+    Route::prefix('transaction')->name('transaction.')->group(function () {
+        Route::prefix('incoming')->name('incoming.')->group(function () {
+            Route::get('/create', [IncomingLetterController::class, 'create'])->name('create');
+            Route::post('/store', [IncomingLetterController::class, 'store'])->name('store');
+            Route::get('/', [IncomingLetterController::class, 'index'])->name('index');
+        });
         Route::resource('outgoing', \App\Http\Controllers\OutgoingLetterController::class);
         Route::resource('{letter}/disposition', \App\Http\Controllers\DispositionController::class)->except(['show']);
 
@@ -59,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('domestic', \App\Http\Controllers\DomesticSptController::class)->except(['index']);
             Route::resource('foreign', \App\Http\Controllers\ForeignSptController::class)->except(['index']);
         });
+
+        Route::get('/incoming', [IncomingLetterController::class, 'index'])->name('incoming.index');
     });
 
     // Archive Routes
@@ -106,5 +114,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/sppd/domestic/store', [SppdController::class, 'domesticStore'])->name('sppd.domestic.store');
     Route::put('/sppd/domestic/{id}', [SppdController::class, 'domesticUpdate'])->name('sppd.domestic.update');
     Route::delete('/sppd/domestic/{id}', [SppdController::class, 'domesticDestroy'])->name('sppd.domestic.destroy');
+
+    // SPT Routes
+    Route::get('/spt/domestic', [SptController::class, 'domestic'])->name('spt.domestic');
+    Route::get('/spt/foreign', [SptController::class, 'foreign'])->name('spt.foreign');
+    Route::post('/spt/domestic', [SptController::class, 'storeDomestic'])->name('spt.domestic.store');
+    Route::post('/spt/foreign', [SptController::class, 'storeForeign'])->name('spt.foreign.store');
+    Route::put('/spt/{spt}', [SptController::class, 'update'])->name('spt.update');
+    Route::delete('/spt/{spt}', [SptController::class, 'destroy'])->name('spt.destroy');
 
 });
