@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SppdController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,5 +94,17 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('classification', \App\Http\Controllers\ClassificationController::class)->except(['show', 'create', 'edit']);
         Route::resource('status', \App\Http\Controllers\LetterStatusController::class)->except(['show', 'create', 'edit']);
     });
+
+    // Route untuk SPPD Luar Daerah
+    Route::get('/sppd/foreign', [SppdController::class, 'foreign'])->name('sppd.foreign');
+    Route::post('/sppd/foreign/store', [SppdController::class, 'foreignStore'])->name('sppd.foreign.store');
+    Route::put('/sppd/foreign/{id}', [SppdController::class, 'foreignUpdate'])->name('sppd.foreign.update');
+    Route::delete('/sppd/foreign/{id}', [SppdController::class, 'foreignDestroy'])->name('sppd.foreign.destroy');
+
+    // Route untuk SPPD Dalam Daerah
+    Route::get('/sppd/domestic', [SppdController::class, 'domestic'])->name('sppd.domestic');
+    Route::post('/sppd/domestic/store', [SppdController::class, 'domesticStore'])->name('sppd.domestic.store');
+    Route::put('/sppd/domestic/{id}', [SppdController::class, 'domesticUpdate'])->name('sppd.domestic.update');
+    Route::delete('/sppd/domestic/{id}', [SppdController::class, 'domesticDestroy'])->name('sppd.domestic.destroy');
 
 });
