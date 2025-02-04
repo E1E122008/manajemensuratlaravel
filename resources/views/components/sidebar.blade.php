@@ -4,6 +4,7 @@
             <img src="{{ asset('logo-black.png') }}" alt="{{ config('app.name') }}" width="35">
             <span class="app-brand-text demo text-black fw-bolder ms-2">{{ config('app.name') }}</span>
         </a>
+        
 
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
             <i class="bx bx-chevron-left bx-sm align-middle"></i>

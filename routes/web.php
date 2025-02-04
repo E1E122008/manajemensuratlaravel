@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SppdController;
 use App\Http\Controllers\SptController;
 use App\Http\Controllers\Transaction\IncomingLetterController;
+use App\Http\Controllers\ArchiveController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,7 +72,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Archive Routes
     Route::prefix('archive')->as('archive.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\ArchiveController::class, 'index'])->name('index');
+        Route::get('/', [ArchiveController::class, 'index'])->name('index');
         Route::resource('document', \App\Http\Controllers\ArchiveDocumentController::class)->except(['index']);
     });
 
