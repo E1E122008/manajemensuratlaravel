@@ -116,8 +116,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/sppd/domestic/{id}', [SppdController::class, 'domesticDestroy'])->name('sppd.domestic.destroy');
 
     // SPT Routes
-    Route::get('/spt/domestic', [SptController::class, 'domestic'])->name('spt.domestic');
-    Route::get('/spt/foreign', [SptController::class, 'foreign'])->name('spt.foreign');
+    Route::get('/spt/domestic', [SptController::class, 'domesticIndex'])->name('spt.domestic.index');
+    Route::get('/spt/foreign', [SptController::class, 'foreignIndex'])->name('spt.foreign.index');
     Route::post('/spt/domestic', [SptController::class, 'storeDomestic'])->name('spt.domestic.store');
     Route::post('/spt/foreign', [SptController::class, 'storeForeign'])->name('spt.foreign.store');
     Route::put('/spt/{spt}', [SptController::class, 'update'])->name('spt.update');

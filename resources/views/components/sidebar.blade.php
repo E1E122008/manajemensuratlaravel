@@ -24,7 +24,49 @@
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">{{ __('menu.header.main_menu') }}</span>
         </li>
-
+        <!-- Transaction Menu -->
+        <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.*') ? 'active open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-mail-send"></i>
+                <div data-i18n="{{ __('menu.transaction.menu') }}">{{ __('menu.transaction.menu') }}</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.incoming.*') ? 'active' : '' }}">
+                    <a href="{{ route('transaction.incoming.index') }}" class="menu-link">
+                        <div data-i18n="{{ __('menu.transaction.incoming_letter') }}">{{ __('menu.transaction.incoming_letter') }}</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.outgoing.*') ? 'active' : '' }}">
+                    <a href="{{ route('transaction.outgoing.index') }}" class="menu-link">
+                        <div data-i18n="{{ __('menu.transaction.outgoing_letter') }}">{{ __('menu.transaction.outgoing_letter') }}</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <!-- Draft PHD Menu -->
+        <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('draft-phd.*') ? 'active open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-file"></i>
+                <div data-i18n="{{ __('menu.draft_phd.menu') }}">{{ __('menu.draft_phd.menu') }}</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item">
+                    <a href="{{ route('draft-phd.sk') }}" class="menu-link">
+                        <div data-i18n="{{ __('menu.draft_phd.sk') }}">{{ __('menu.draft_phd.sk') }}</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('draft-phd.perda') }}" class="menu-link">
+                        <div data-i18n="{{ __('menu.draft_phd.perda') }}">{{ __('menu.draft_phd.perda') }}</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('draft-phd.pergub') }}" class="menu-link">
+                        <div data-i18n="{{ __('menu.draft_phd.pergub') }}">{{ __('menu.draft_phd.pergub') }}</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
         <!-- SPPD Menu -->
         <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.sppd.*') ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -54,34 +96,12 @@
             <ul class="menu-sub">
                 <li class="menu-item">
                     <a href="{{ route('transaction.spt.domestic') }}" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-map"></i>
                         <div data-i18n="{{ __('menu.transaction.spt.domestic') }}">{{ __('menu.transaction.spt.domestic') }}</div>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="{{ route('transaction.spt.foreign') }}" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-plane"></i>
                         <div data-i18n="{{ __('menu.transaction.spt.foreign') }}">{{ __('menu.transaction.spt.foreign') }}</div>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-        <!-- Transaction Menu -->
-        <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.*') ? 'active open' : '' }}">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-mail-send"></i>
-                <div data-i18n="{{ __('menu.transaction.menu') }}">{{ __('menu.transaction.menu') }}</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.incoming.*') ? 'active' : '' }}">
-                    <a href="{{ route('transaction.incoming.index') }}" class="menu-link">
-                        <div data-i18n="{{ __('menu.transaction.incoming_letter') }}">{{ __('menu.transaction.incoming_letter') }}</div>
-                    </a>
-                </li>
-                <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('transaction.outgoing.*') ? 'active' : '' }}">
-                    <a href="{{ route('transaction.outgoing.index') }}" class="menu-link">
-                        <div data-i18n="{{ __('menu.transaction.outgoing_letter') }}">{{ __('menu.transaction.outgoing_letter') }}</div>
                     </a>
                 </li>
             </ul>
@@ -166,31 +186,6 @@
                 <i class="menu-icon tf-icons bx bx-archive"></i>
                 <div data-i18n="{{ __('menu.archive.menu') }}">{{ __('menu.archive.menu') }}</div>
             </a>
-        </li>
-
-        <!-- Draft PHD Menu -->
-        <li class="menu-item {{ \Illuminate\Support\Facades\Route::is('draft-phd.*') ? 'active open' : '' }}">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-file"></i>
-                <div data-i18n="{{ __('menu.draft_phd.menu') }}">{{ __('menu.draft_phd.menu') }}</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="{{ route('draft-phd.sk') }}" class="menu-link">
-                        <div data-i18n="{{ __('menu.draft_phd.sk') }}">{{ __('menu.draft_phd.sk') }}</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="{{ route('draft-phd.perda') }}" class="menu-link">
-                        <div data-i18n="{{ __('menu.draft_phd.perda') }}">{{ __('menu.draft_phd.perda') }}</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="{{ route('draft-phd.pergub') }}" class="menu-link">
-                        <div data-i18n="{{ __('menu.draft_phd.pergub') }}">{{ __('menu.draft_phd.pergub') }}</div>
-                    </a>
-                </li>
-            </ul>
         </li>
     </ul>
 </aside>
