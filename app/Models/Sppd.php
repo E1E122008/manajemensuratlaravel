@@ -10,29 +10,39 @@ class Sppd extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nomor_urut',           // nomor urut
-        'tanggal',              // tanggal
-        'perihal',              // perihal
-        'nomor_spt',            // nomor spt
-        'nama_petugas',         // nama yang ditugaskan
-        'tanggal_berangkat',    // tanggal berangkat
-        'tanggal_kembali',      // tanggal kembali
-        'created_by',
-        'updated_by'
+        'nomor_sppd',
+        'tanggal',
+        'pegawai_id',
+        'tujuan',
+        'keperluan',
+        'tanggal_berangkat',
+        'tanggal_kembali',
+        'type',
+        'status'
     ];
 
     protected $casts = [
-        'tanggal' => 'datetime',
-        'tanggal_berangkat' => 'datetime',
-        'tanggal_kembali' => 'datetime',
+        'tanggal' => 'date',
+        'tanggal_berangkat' => 'date',
+        'tanggal_kembali' => 'date'
     ];
 
-    public function pembuat()
+    public function attachments()
+    {
+        return $this->hasMany(SppdAttachment::class);
+    }
+
+    public function pegawai()
+    {
+        return $this->belongsTo(Employee::class, 'pegawai_id');
+    }
+
+    public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function pengubah()
+    public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }

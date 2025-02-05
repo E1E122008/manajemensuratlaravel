@@ -57,14 +57,23 @@ Route::middleware(['auth'])->group(function () {
             Route::get('foreign', [\App\Http\Controllers\SppdController::class, 'foreign'])->name('foreign');
             Route::resource('domestic', \App\Http\Controllers\DomesticSppdController::class)->except(['index']);
             Route::resource('foreign', \App\Http\Controllers\ForeignSppdController::class)->except(['index']);
+            Route::get('/foreign/export', [SppdController::class, 'foreignExport'])->name('foreign.export');
+            Route::get('/export', [SppdController::class, 'export'])->name('export');
+            Route::post('/foreign/store', [SppdController::class, 'foreignStore'])->name('foreign.store');
         });
 
         // SPT Routes
-        Route::prefix('spt')->as('spt.')->group(function () {
-            Route::get('domestic', [\App\Http\Controllers\SptController::class, 'domestic'])->name('domestic');
-            Route::get('foreign', [\App\Http\Controllers\SptController::class, 'foreign'])->name('foreign');
-            Route::resource('domestic', \App\Http\Controllers\DomesticSptController::class)->except(['index']);
-            Route::resource('foreign', \App\Http\Controllers\ForeignSptController::class)->except(['index']);
+        Route::prefix('spt')->name('spt.')->group(function () {
+            Route::get('domestic', [SptController::class, 'domestic'])->name('domestic');
+            Route::get('foreign', [SptController::class, 'foreign'])->name('foreign');
+            Route::post('domestic/store', [SptController::class, 'store'])->name('domestic.store');
+            Route::post('foreign/store', [SptController::class, 'storeForeign'])->name('foreign.store');
+            Route::put('{spt}', [SptController::class, 'update'])->name('update');
+            Route::delete('{spt}', [SptController::class, 'destroy'])->name('destroy');
+
+            // Route untuk SPT Luar Daerah
+            Route::post('foreign/store', [SptController::class, 'storeForeign'])->name('foreign.store');
+            Route::delete('foreign/{id}', [SptController::class, 'destroyForeign'])->name('foreign.destroy');
         });
 
         Route::get('/incoming', [IncomingLetterController::class, 'index'])->name('incoming.index');
@@ -111,15 +120,18 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/sppd/foreign/{id}', [SppdController::class, 'foreignDestroy'])->name('sppd.foreign.destroy');
 
     // Route untuk SPPD Dalam Daerah
-    Route::get('/sppd/domestic', [SppdController::class, 'domestic'])->name('sppd.domestic');
-    Route::post('/sppd/domestic/store', [SppdController::class, 'domesticStore'])->name('sppd.domestic.store');
-    Route::put('/sppd/domestic/{id}', [SppdController::class, 'domesticUpdate'])->name('sppd.domestic.update');
-    Route::delete('/sppd/domestic/{id}', [SppdController::class, 'domesticDestroy'])->name('sppd.domestic.destroy');
+    Route::prefix('sppd')->name('sppd.')->group(function () {
+        Route::get('/domestic', [SppdController::class, 'domestic'])->name('domestic');
+        Route::post('/domestic', [SppdController::class, 'store'])->name('domestic.store');
+        Route::get('/export', [SppdController::class, 'export'])->name('export');
+        Route::put('/domestic/{id}', [SppdController::class, 'domesticUpdate'])->name('domestic.update');
+        Route::delete('/domestic/{id}', [SppdController::class, 'domesticDestroy'])->name('domestic.destroy');
+    });
 
     // SPT Routes
     Route::get('/spt/domestic', [SptController::class, 'domesticIndex'])->name('spt.domestic.index');
     Route::get('/spt/foreign', [SptController::class, 'foreignIndex'])->name('spt.foreign.index');
-    Route::post('/spt/domestic', [SptController::class, 'storeDomestic'])->name('spt.domestic.store');
+    Route::post('/spt/domestic/store', [SptController::class, 'store'])->name('spt.domestic.store');
     Route::post('/spt/foreign', [SptController::class, 'storeForeign'])->name('spt.foreign.store');
     Route::put('/spt/{spt}', [SptController::class, 'update'])->name('spt.update');
     Route::delete('/spt/{spt}', [SptController::class, 'destroy'])->name('spt.destroy');

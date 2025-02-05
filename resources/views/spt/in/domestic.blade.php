@@ -18,9 +18,10 @@
                         <tr>
                             <th>No</th>
                             <th>Tanggal</th>
-                            <th>Perihal</th>
-                            <th>Nomor Surat</th>
-                            <th>Nama yang Bertugas</th>
+                            <th>Nomor SPT</th>
+                            <th>Pegawai</th>
+                            <th>Tujuan</th>
+                            <th>Keperluan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -29,9 +30,10 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $spt->tanggal->format('d/m/Y') }}</td>
-                            <td>{{ $spt->perihal }}</td>
-                            <td>{{ $spt->nomor_surat }}</td>
-                            <td>{{ $spt->nama_yang_bertugas }}</td>
+                            <td>{{ $spt->nomor_spt }}</td>
+                            <td>{{ $spt->employee->nama ?? '-' }}</td>
+                            <td>{{ $spt->tujuan }}</td>
+                            <td>{{ $spt->keperluan }}</td>
                             <td>
                                 <div class="dropdown">
                                     <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -50,7 +52,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center">Tidak ada data</td>
+                            <td colspan="7" class="text-center">Tidak ada data</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -68,30 +70,36 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="sptForm" action="{{ route('spt.domestic.store') }}" method="POST" enctype="multipart/form-data">
+                    <form id="sptForm" action="{{ route('spt.domestic.store') }}" method="POST">
                         @csrf
                         <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nomor SPT</label>
+                                <input type="text" class="form-control" name="nomor_spt" required>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" class="form-control" name="tanggal" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Perihal</label>
-                            <input type="text" class="form-control" name="perihal" required>
+                            <label class="form-label">Pegawai yang Bertugas</label>
+                            <select class="form-select" name="pegawai_id" required>
+                                <option value="">Pilih Pegawai</option>
+                                @foreach($employees as $employee)
+                                    <option value="{{ $employee->id }}">{{ $employee->nama }} - {{ $employee->nip }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nomor Surat</label>
-                            <input type="text" class="form-control" name="nomor_surat" required>
+                            <label class="form-label">Tujuan</label>
+                            <input type="text" class="form-control" name="tujuan" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nama yang Bertugas</label>
-                            <input type="text" class="form-control" name="nama_yang_bertugas" required>
+                            <label class="form-label">Keperluan</label>
+                            <textarea class="form-control" name="keperluan" rows="3" required></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Lampiran</label>
-                            <input type="file" class="form-control" name="attachments[]" multiple>
-                        </div>
+                        <input type="hidden" name="type" value="domestic">
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -106,20 +114,117 @@
 @push('script')
 <script>
     $(document).ready(function() {
-        // Validasi form sebelum submit
         $('#sptForm').submit(function(e) {
-            // Add any necessary validation here
+            e.preventDefault();
+            
+            let formData = new FormData(this);
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if(response.success) {
+                        // Tutup modal
+                        $('#createSptModal').modal('hide');
+                        
+                        // Tampilkan sweet alert sukses
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'SPT berhasil dibuat',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Terjadi kesalahan: ' + response.message
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessage = '';
+                    
+                    for(let key in errors) {
+                        errorMessage += errors[key][0] + '\n';
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Terjadi kesalahan:\n' + errorMessage
+                    });
+                }
+            });
         });
     });
+
+    function deleteSpt(id) {
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data SPT akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `{{ url('spt') }}/${id}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'SPT berhasil dihapus',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: 'Terjadi kesalahan: ' + response.message
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Terjadi kesalahan saat menghapus data'
+                        });
+                    }
+                });
+            }
+        });
+    }
 
     function editSpt(id) {
         // Implementasi fungsi edit
     }
 
-    function deleteSpt(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-            // Implementasi fungsi delete
-        }
-    }
+    // Reset form saat modal ditutup
+    $('#createSptModal').on('hidden.bs.modal', function () {
+        $('#sptForm').trigger('reset');
+    });
 </script>
 @endpush 

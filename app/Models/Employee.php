@@ -30,4 +30,14 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function sppds()
+    {
+        return $this->hasMany(Sppd::class, 'pegawai_id');
+    }
+
+    public function spts()
+    {
+        return $this->hasMany(Spt::class, 'pegawai_id');
+    }
 }

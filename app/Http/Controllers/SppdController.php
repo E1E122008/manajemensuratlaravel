@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sppd;
 use App\Models\Employee;
+use App\Exports\SppdExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\ForeignSppd;
+use App\Exports\ForeignSppdExport;
 
 
 class SppdController extends Controller
@@ -25,20 +29,77 @@ class SppdController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nomor_sppd' => 'required|unique:sppds',
-            'tanggal' => 'required|date',
-            'pegawai_id' => 'required|exists:employees,id',
-            'tujuan' => 'required',
-            'keperluan' => 'required',
-            'tanggal_berangkat' => 'required|date',
-            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_berangkat',
-        ]);
+        try {
+            // Log request data untuk debugging
+            \Log::info('SPPD store request:', $request->all());
 
-        Sppd::create($validated);
+            $validated = $request->validate([
+                'tanggal' => 'required|date',
+                'pegawai_id' => 'required|exists:employees,id',
+                'tujuan' => 'required|string',
+                'keperluan' => 'required|string',
+                'tanggal_berangkat' => 'required|date',
+                'tanggal_kembali' => 'required|date|after_or_equal:tanggal_berangkat',
+                'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048'
+            ]);
 
-        return redirect()->route('sppd.index')
-            ->with('success', 'SPPD berhasil dibuat');
+            // Generate nomor SPPD
+            $tahun = date('Y');
+            $lastNumber = Sppd::whereYear('created_at', $tahun)->max('id') ?? 0;
+            $newNumber = $lastNumber + 1;
+            $nomor_sppd = sprintf("%03d/SPPD/%s", $newNumber, $tahun);
+
+            // Log data sebelum create
+            \Log::info('Data yang akan disimpan:', [
+                'nomor_sppd' => $nomor_sppd,
+                'validated_data' => $validated
+            ]);
+
+            $sppd = Sppd::create([
+                'nomor_sppd' => $nomor_sppd,
+                'tanggal' => $validated['tanggal'],
+                'pegawai_id' => $validated['pegawai_id'],
+                'tujuan' => $validated['tujuan'],
+                'keperluan' => $validated['keperluan'],
+                'tanggal_berangkat' => $validated['tanggal_berangkat'],
+                'tanggal_kembali' => $validated['tanggal_kembali'],
+                'type' => 'domestic',
+                'status' => 'draft'
+            ]);
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('sppd-attachments', 'public');
+                    $sppd->attachments()->create([
+                        'file_path' => $path,
+                        'file_name' => $file->getClientOriginalName()
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'SPPD berhasil ditambahkan'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error:', [
+                'errors' => $e->errors(),
+                'message' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error validasi: ' . $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error creating SPPD: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan SPPD: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -78,9 +139,10 @@ class SppdController extends Controller
      */
     public function domestic()
     {
-        $sppds = Sppd::where('type', 'domestic')->get();
-        $employees = Employee::all();
-        return view('sppd.domestic', compact('sppds', 'employees'));
+        $sppds = Sppd::where('type', 'domestic')->latest()->get();
+        $employees = Employee::select('id', 'nama')->orderBy('nama')->get();
+        
+        return view('sppd.in.domestic', compact('sppds', 'employees'));
     }
 
     /**
@@ -88,30 +150,62 @@ class SppdController extends Controller
      */
     public function foreign()
     {
-        $sppds = Sppd::with('employee')
-            ->where('type', 'foreign')
-            ->latest()
-            ->get();
-        $employees = Employee::all();
-        
-        return view('sppd.foreign', compact('sppds', 'employees'));
+        $sppds = ForeignSppd::latest()->get();
+        return view('sppd.foreign', compact('sppds'));
     }
 
     public function foreignStore(Request $request)
     {
-        $validated = $request->validate([
-            'nomor_urut' => 'required|integer',
-            'tanggal' => 'required|date',
-            'perihal' => 'required|string',
-            'nomor_spt' => 'required|string',
-            'nama_petugas' => 'required|string',
-            'tanggal_berangkat' => 'required|date',
-            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_berangkat',
-        ]);
+        try {
+            $validated = $request->validate([
+                'tanggal' => 'required|date',
+                'perihal' => 'required|string',
+                'nomor_spt' => 'required|string',
+                'nama_yang_bertugas' => 'required|string',
+                'tanggal_berangkat' => 'required|date',
+                'tanggal_kembali' => 'required|date|after_or_equal:tanggal_berangkat',
+                'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048'
+            ]);
 
-        Sppd::create($validated);
+            // Generate nomor SPPD
+            $tahun = date('Y');
+            $lastNumber = ForeignSppd::whereYear('created_at', $tahun)->max('id') ?? 0;
+            $newNumber = $lastNumber + 1;
+            $nomor_sppd = sprintf("%03d/SPPD-LN/%s", $newNumber, $tahun);
 
-        return redirect()->route('sppd.foreign')->with('success', 'SPPD berhasil dibuat');
+            $sppd = ForeignSppd::create([
+                'nomor_sppd' => $nomor_sppd,
+                'tanggal' => $validated['tanggal'],
+                'perihal' => $validated['perihal'],
+                'nomor_spt' => $validated['nomor_spt'],
+                'nama_yang_bertugas' => $validated['nama_yang_bertugas'],
+                'tanggal_berangkat' => $validated['tanggal_berangkat'],
+                'tanggal_kembali' => $validated['tanggal_kembali'],
+                'status' => 'draft'
+            ]);
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('foreign-sppd-attachments', 'public');
+                    $sppd->attachments()->create([
+                        'file_path' => $path,
+                        'file_name' => $file->getClientOriginalName()
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'SPPD Luar Daerah berhasil ditambahkan'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating foreign SPPD: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan SPPD: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function domesticStore(Request $request)
@@ -142,6 +236,23 @@ class SppdController extends Controller
 
     public function domesticDestroy($id)
     {
-        // Implementasi delete
+        try {
+            $sppd = Sppd::findOrFail($id);
+            $sppd->delete();
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false], 500);
+        }
+    }
+
+    public function export()
+    {
+        return Excel::download(new SppdExport, 'sppd-' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function foreignExport()
+    {
+        return Excel::download(new ForeignSppdExport, 'sppd-luar-daerah-' . date('Y-m-d') . '.xlsx');
     }
 }

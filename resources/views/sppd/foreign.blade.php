@@ -3,6 +3,10 @@
 @section('content')
     <x-breadcrumb
     :values="[__('Surat Perintah Perjalanan Dinas'), __('Luar Daerah')]">
+      
+        {{-- <a href="{{ route('sppd.foreign.export') }}" class="btn btn-success">
+            <i class="bx bx-export"></i> Export Excel
+        </a> --}}
     </x-breadcrumb>
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -120,26 +124,149 @@
 @push('script')
 <script>
     $(document).ready(function() {
-        // Validasi form sebelum submit
         $('#sppdForm').submit(function(e) {
+            e.preventDefault();
+            
             let tanggalBerangkat = new Date($('input[name="tanggal_berangkat"]').val());
             let tanggalKembali = new Date($('input[name="tanggal_kembali"]').val());
             
             if (tanggalKembali < tanggalBerangkat) {
-                e.preventDefault();
-                alert('Tanggal kembali tidak boleh lebih awal dari tanggal berangkat!');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Tanggal kembali tidak boleh lebih awal dari tanggal berangkat!',
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                });
+                return false;
             }
+
+            let formData = new FormData(this);
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if(response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        }).then(() => {
+                            $('#createSppdModal').modal('hide');
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: response.message,
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = 'Terjadi kesalahan saat menyimpan data';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: errorMessage,
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    });
+                }
+            });
+        });
+
+        // Reset form ketika modal ditutup
+        $('#createSppdModal').on('hidden.bs.modal', function () {
+            $('#sppdForm')[0].reset();
         });
     });
 
-    function editSppd(id) {
-        // Implementasi fungsi edit
-    }
-
     function deleteSppd(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-            // Implementasi fungsi delete
-        }
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                container: 'my-swal'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/sppd/foreign/${id}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Terhapus!',
+                                text: 'Data berhasil dihapus.',
+                                showConfirmButton: false,
+                                timer: 1500,
+                                customClass: {
+                                    container: 'my-swal'
+                                }
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: 'Gagal menghapus data',
+                                customClass: {
+                                    container: 'my-swal'
+                                }
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Terjadi kesalahan saat menghapus data',
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        });
+                    }
+                });
+            }
+        });
     }
 </script>
 @endpush 

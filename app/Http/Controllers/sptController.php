@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Spt;
 use App\Models\Employee;
+use App\Models\ForeignSpt;
 use Illuminate\Http\Request;
 
 class SptController extends Controller
@@ -29,6 +30,7 @@ class SptController extends Controller
             ->where('type', 'domestic')
             ->latest()
             ->get();
+            
         $employees = Employee::all();
         
         return view('spt.in.domestic', compact('spts', 'employees'));
@@ -39,10 +41,7 @@ class SptController extends Controller
      */
     public function foreign()
     {
-        $spts = Spt::with('employee')
-            ->where('type', 'foreign')
-            ->latest()
-            ->get();
+        $spts = ForeignSpt::with('employee')->latest()->get();
         $employees = Employee::all();
         
         return view('spt.outg.foreign', compact('spts', 'employees'));
@@ -51,43 +50,68 @@ class SptController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function storeDomestic(Request $request)
+    public function store(Request $request)
     {
+        // Debug: Log data yang diterima
+        \Log::info('Data SPT yang diterima:', $request->all());
+
         $validated = $request->validate([
-            'nomor_spt' => 'required|unique:spts',
+            'nomor_spt' => 'required|unique:spts,nomor_spt',
             'tanggal' => 'required|date',
             'pegawai_id' => 'required|exists:employees,id',
             'tujuan' => 'required',
             'keperluan' => 'required',
+            'type' => 'required|in:domestic,foreign'
         ]);
 
-        $validated['type'] = 'domestic';
-
-        Spt::create($validated);
-
-        return redirect()->route('spt.domestic')
-            ->with('success', 'SPT Dalam Daerah berhasil dibuat');
+        try {
+            // Debug: Log data yang akan disimpan
+            \Log::info('Data SPT yang akan disimpan:', $validated);
+            
+            $spt = Spt::create($validated);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'SPT berhasil dibuat',
+                'data' => $spt
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error saat menyimpan SPT: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a foreign SPT
      */
     public function storeForeign(Request $request)
     {
         $validated = $request->validate([
-            'nomor_spt' => 'required|unique:spts',
+            'nomor_spt' => 'required|unique:foreign_spts,nomor_spt',
             'tanggal' => 'required|date',
             'pegawai_id' => 'required|exists:employees,id',
             'tujuan' => 'required',
             'keperluan' => 'required',
+            'lama_tugas' => 'required|integer|min:1'
         ]);
 
-        $validated['type'] = 'foreign';
-
-        Spt::create($validated);
-
-        return redirect()->route('spt.foreign')
-            ->with('success', 'SPT Luar Daerah berhasil dibuat');
+        try {
+            $spt = ForeignSpt::create($validated);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'SPT Luar Daerah berhasil dibuat',
+                'data' => $spt
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -103,10 +127,20 @@ class SptController extends Controller
             'keperluan' => 'required',
         ]);
 
-        $spt->update($validated);
-
-        return redirect()->back()
-            ->with('success', 'SPT berhasil diperbarui');
+        try {
+            $spt->update($validated);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'SPT berhasil diperbarui',
+                'data' => $spt
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -114,39 +148,37 @@ class SptController extends Controller
      */
     public function destroy(Spt $spt)
     {
-        $spt->delete();
-
-        return redirect()->back()
-            ->with('success', 'SPT berhasil dihapus');
+        try {
+            $spt->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'SPT berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function store(Request $request)
+    public function destroyForeign($id)
     {
-        $request->validate([
-            'nomor_urut' => 'required|integer',
-            'tanggal' => 'required|date',
-            'perihal' => 'required|string',
-            'nama_yang_bertugas' => 'required|string',
-            'attachments.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048', // Adjust as needed
-        ]);
-
-        $spt = new Spt();
-        $spt->nomor_urut = $request->nomor_urut;
-        $spt->tanggal = $request->tanggal;
-        $spt->perihal = $request->perihal;
-        $spt->nama_yang_bertugas = $request->nama_yang_bertugas;
-
-        // Handle file uploads
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('attachments', 'public');
-                $spt->attachments()->create(['path' => $path]);
-            }
+        try {
+            $spt = ForeignSpt::findOrFail($id);
+            $spt->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'SPT Luar Daerah berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        $spt->save();
-
-        return redirect()->route('spt.domestic.index')->with('success', 'SPT created successfully.');
     }
 
     public function foreignIndex()
@@ -155,3 +187,5 @@ class SptController extends Controller
         return view('spt.outg.foreign', compact('spts')); // Ensure this line references 'spt.outg.foreign'
     }
 }
+
+
