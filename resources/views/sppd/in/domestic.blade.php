@@ -23,12 +23,11 @@
                             <th>No</th>
                             <th>Nomor SPPD</th>
                             <th>Tanggal</th>
-                            <th>Pegawai</th>
+                            <th>Nama yang bertugas</th>
                             <th>Tujuan</th>
-                            <th>Keperluan</th>
+                            <th>perihal</th>
                             <th>Tanggal Berangkat</th>
                             <th>Tanggal Kembali</th>
-                            <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -38,12 +37,11 @@
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $sppd->nomor_sppd }}</td>
                             <td>{{ $sppd->tanggal->format('d/m/Y') }}</td>
-                            <td>{{ $sppd->pegawai->nama }}</td>
+                            <td>{{ $sppd->nama_yang_bertugas}}</td>
                             <td>{{ $sppd->tujuan }}</td>
-                            <td>{{ $sppd->keperluan }}</td>
+                            <td>{{ $sppd->perihal }}</td>
                             <td>{{ $sppd->tanggal_berangkat->format('d/m/Y') }}</td>
                             <td>{{ $sppd->tanggal_kembali->format('d/m/Y') }}</td>
-                            <td>{{ $sppd->status }}</td>
                             <td>
                                 <div class="dropdown">
                                     <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -89,21 +87,16 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Pegawai</label>
-                            <select class="form-control" name="pegawai_id" required>
-                                <option value="">Pilih Pegawai</option>
-                                @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->nama }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Nama yang Bertugas</label>
+                            <input type="text" class="form-control" name="nama_yang_bertugas" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Tujuan</label>
                             <input type="text" class="form-control" name="tujuan" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Keperluan</label>
-                            <textarea class="form-control" name="keperluan" required></textarea>
+                            <label class="form-label">perihal</label>
+                            <textarea class="form-control" name="perihal" required></textarea>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">

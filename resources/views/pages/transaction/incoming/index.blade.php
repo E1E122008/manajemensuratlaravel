@@ -18,25 +18,25 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>{{ __('model.letter.agenda_number') }}</th>
-                            <th>{{ __('model.letter.reference_number') }}</th>
-                            <th>{{ __('model.letter.from') }}</th>
-                            <th>{{ __('model.letter.letter_date') }}</th>
-                            <th>{{ __('model.letter.received_date') }}</th>
-                            <th>{{ __('model.letter.description') }}</th>
+                            <th>Nomor Agenda</th>
+                            <th>Nomor Surat</th>
+                            <th>Pengirim</th>
+                            <th>Tanggal Surat</th>
+                            <th>Tanggal Diterima</th>
+                            <th>Perihal</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($incomingLetters as $index => $letter)
+                        @foreach($incomingLetters as $letter)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $letter->agenda_number }}</td>
-                                <td>{{ $letter->reference_number }}</td>
-                                <td>{{ $letter->from }}</td>
-                                <td>{{ $letter->letter_date->format('d/m/Y') }}</td>
-                                <td>{{ $letter->received_date->format('d/m/Y') }}</td>
-                                <td>{{ $letter->description }}</td>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $letter->nomor_agenda }}</td>
+                                <td>{{ $letter->nomor_surat }}</td>
+                                <td>{{ $letter->pengirim }}</td>
+                                <td>{{ $letter->tanggal_surat }}</td>
+                                <td>{{ $letter->tanggal_diterima }}</td>
+                                <td>{{ $letter->perihal }}</td>
                                 <td>
                                     <div class="dropdown">
                                         <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -53,11 +53,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center">{{ __('menu.general.empty') }}</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -96,8 +92,8 @@
                             <input type="date" class="form-control" name="received_date" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Deskripsi</label>
-                            <textarea class="form-control" name="description" required></textarea>
+                            <label class="form-label">Perihal</label>
+                            <textarea class="form-control" name="perihal" required></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Lampiran</label>

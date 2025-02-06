@@ -35,12 +35,14 @@ class SppdController extends Controller
 
             $validated = $request->validate([
                 'tanggal' => 'required|date',
-                'pegawai_id' => 'required|exists:employees,id',
+                'nama_yang_bertugas' => 'nullable',
                 'tujuan' => 'required|string',
-                'keperluan' => 'required|string',
+                'perihal' => 'nullable',
                 'tanggal_berangkat' => 'required|date',
                 'tanggal_kembali' => 'required|date|after_or_equal:tanggal_berangkat',
-                'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048'
+                'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
+            ], [
+                'nama_yang_bertugas.nullable' => 'Kolom nama yang bertugas tidak perlu diisi.',
             ]);
 
             // Generate nomor SPPD
@@ -58,9 +60,8 @@ class SppdController extends Controller
             $sppd = Sppd::create([
                 'nomor_sppd' => $nomor_sppd,
                 'tanggal' => $validated['tanggal'],
-                'pegawai_id' => $validated['pegawai_id'],
                 'tujuan' => $validated['tujuan'],
-                'keperluan' => $validated['keperluan'],
+                'perihal' => $validated['perihal'],
                 'tanggal_berangkat' => $validated['tanggal_berangkat'],
                 'tanggal_kembali' => $validated['tanggal_kembali'],
                 'type' => 'domestic',

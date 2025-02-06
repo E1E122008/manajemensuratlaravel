@@ -28,6 +28,7 @@ return [
         'perda' => 'PERDA',
         'pergub' => 'PERGUB',
     ],
+    
     'agenda' => [
         'menu' => 'Buku Agenda',
         'incoming_letter' => 'Surat Masuk',
