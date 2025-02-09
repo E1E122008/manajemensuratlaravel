@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\IncomingLetter;
 use App\Models\Classification;
 use Illuminate\Http\Request;
+use App\Models\Letter;
 
 class IncomingLetterController extends Controller
 {
@@ -18,38 +19,45 @@ class IncomingLetterController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'reference_number' => 'required|string|max:255',
-            'from' => 'required|string|max:255',
-            'agenda_number' => 'required|string|max:255',
+            'reference_number' => 'required',
+            'sender' => 'required',
             'letter_date' => 'required|date',
             'received_date' => 'required|date',
-            'description' => 'required|string',
-            'classification_code' => 'required|exists:classifications,code',
-            'note' => 'nullable|string',
-            'attachments.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
+            'description' => 'required',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048'
         ]);
 
-        IncomingLetter::create($validated);
+        $letter = Letter::create([
+            'type' => 'incoming',
+            'reference_number' => $validated['reference_number'],
+            'sender' => $validated['sender'],
+            'letter_date' => $validated['letter_date'],
+            'received_date' => $validated['received_date'],
+            'description' => $validated['description'],
+            'user_id' => auth()->id()
+        ]);
+
+        // Handle attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('attachments/incoming');
+                $letter->attachments()->create([
+                    'filename' => $file->getClientOriginalName(),
+                    'path' => $path
+                ]);
+            }
+        }
 
         return redirect()->route('transaction.incoming.index')
-            ->with('success', 'Surat masuk berhasil ditambahkan');
+            ->with('success', __('messages.created'));
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search'); // Get the search input
-        
-        $incomingLetters = IncomingLetter::with('classification')
-            ->when($search, function ($query) use ($search) {
-                return $query->where('reference_number', 'like', "%{$search}%")
-                             ->orWhere('from', 'like', "%{$search}%");
-            })
-            ->latest()
+        $incomingLetters = Letter::where('type', 'incoming')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
-
-        // Retrieve classifications
-        $classifications = Classification::all();
-
-        return view('pages.transaction.incoming.index', compact('incomingLetters', 'search', 'classifications'));
+        
+        return view('pages.transaction.incoming.index', compact('incomingLetters'));
     }
 } 

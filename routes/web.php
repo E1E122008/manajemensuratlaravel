@@ -5,6 +5,10 @@ use App\Http\Controllers\SppdController;
 use App\Http\Controllers\SptController;
 use App\Http\Controllers\Transaction\IncomingLetterController;
 use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\Transaction\ExportLetterController;
+use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\Sppd\ExportSppdController;
+use App\Http\Controllers\Spt\ExportSptController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,9 +48,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('transaction')->name('transaction.')->group(function () {
         Route::prefix('incoming')->name('incoming.')->group(function () {
-            Route::get('/create', [IncomingLetterController::class, 'create'])->name('create');
-            Route::post('/store', [IncomingLetterController::class, 'store'])->name('store');
             Route::get('/', [IncomingLetterController::class, 'index'])->name('index');
+            Route::get('/create', [IncomingLetterController::class, 'create'])->name('create');
+            Route::post('/', [IncomingLetterController::class, 'store'])->name('store');
+            Route::get('/{letter}/edit', [IncomingLetterController::class, 'edit'])->name('edit');
+            Route::put('/{letter}', [IncomingLetterController::class, 'update'])->name('update');
+            Route::delete('/{letter}', [IncomingLetterController::class, 'destroy'])->name('destroy');
+            Route::get('/export', [ExportLetterController::class, 'exportIncoming'])->name('export');
         });
         Route::resource('outgoing', \App\Http\Controllers\OutgoingLetterController::class);
         Route::resource('{letter}/disposition', \App\Http\Controllers\DispositionController::class)->except(['show']);
@@ -60,20 +68,31 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/foreign/export', [SppdController::class, 'foreignExport'])->name('foreign.export');
             Route::get('/export', [SppdController::class, 'export'])->name('export');
             Route::post('/foreign/store', [SppdController::class, 'foreignStore'])->name('foreign.store');
+            Route::get('/domestic/export', [ExportSppdController::class, 'exportDomestic'])
+                ->name('sppd.domestic.export');
+            Route::get('/foreign/export', [ExportSppdController::class, 'exportForeign'])
+                ->name('sppd.foreign.export');
         });
 
         // SPT Routes
-        Route::prefix('spt')->name('spt.')->group(function () {
-            Route::get('domestic', [SptController::class, 'domestic'])->name('domestic');
-            Route::get('foreign', [SptController::class, 'foreign'])->name('foreign');
-            Route::post('domestic/store', [SptController::class, 'store'])->name('domestic.store');
-            Route::post('foreign/store', [SptController::class, 'storeForeign'])->name('foreign.store');
-            Route::put('{spt}', [SptController::class, 'update'])->name('update');
-            Route::delete('{spt}', [SptController::class, 'destroy'])->name('destroy');
+        Route::prefix('spt')->group(function () {
+            // Dalam Daerah
+            Route::get('/domestic', [SptController::class, 'indexDomestic'])->name('spt.domestic.index');
+            Route::post('/domestic', [SptController::class, 'storeDomestic'])->name('spt.domestic.store');
+            Route::get('/domestic/{spt}/edit', [SptController::class, 'editDomestic'])->name('spt.domestic.edit');
+            Route::put('/domestic/{spt}', [SptController::class, 'updateDomestic'])->name('spt.domestic.update');
+            Route::delete('/domestic/{spt}', [SptController::class, 'destroyDomestic'])->name('spt.domestic.destroy');
+            Route::get('/domestic/export', [ExportSptController::class, 'exportDomestic'])->name('spt.domestic.export');
+            Route::get('/domestic/{spt}/print', [SptController::class, 'printDomestic'])->name('spt.domestic.print');
 
-            // Route untuk SPT Luar Daerah
-            Route::post('foreign/store', [SptController::class, 'storeForeign'])->name('foreign.store');
-            Route::delete('foreign/{id}', [SptController::class, 'destroyForeign'])->name('foreign.destroy');
+            // Luar Daerah
+            Route::get('/foreign', [SptController::class, 'indexForeign'])->name('spt.foreign.index');
+            Route::post('/foreign', [SptController::class, 'storeForeign'])->name('spt.foreign.store');
+            Route::get('/foreign/{spt}/edit', [SptController::class, 'editForeign'])->name('spt.foreign.edit');
+            Route::put('/foreign/{spt}', [SptController::class, 'updateForeign'])->name('spt.foreign.update');
+            Route::delete('/foreign/{spt}', [SptController::class, 'destroyForeign'])->name('spt.foreign.destroy');
+            Route::get('/foreign/export', [ExportSptController::class, 'exportForeign'])->name('spt.foreign.export');
+            Route::get('/foreign/{spt}/print', [SptController::class, 'printForeign'])->name('spt.foreign.print');
         });
 
         Route::get('/incoming', [IncomingLetterController::class, 'index'])->name('incoming.index');
@@ -128,12 +147,17 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/domestic/{id}', [SppdController::class, 'domesticDestroy'])->name('domestic.destroy');
     });
 
-    // SPT Routes
-    Route::get('/spt/domestic', [SptController::class, 'domesticIndex'])->name('spt.domestic.index');
-    Route::get('/spt/foreign', [SptController::class, 'foreignIndex'])->name('spt.foreign.index');
-    Route::post('/spt/domestic/store', [SptController::class, 'store'])->name('spt.domestic.store');
-    Route::post('/spt/foreign', [SptController::class, 'storeForeign'])->name('spt.foreign.store');
-    Route::put('/spt/{spt}', [SptController::class, 'update'])->name('spt.update');
-    Route::delete('/spt/{spt}', [SptController::class, 'destroy'])->name('spt.destroy');
+    // Surat Keluar
+    Route::group(['prefix' => 'transaction/outgoing', 'as' => 'transaction.outgoing.'], function () {
+        Route::get('/', [OutgoingLetterController::class, 'index'])->name('index');
+        Route::get('/create', [OutgoingLetterController::class, 'create'])->name('create');
+        Route::post('/', [OutgoingLetterController::class, 'store'])->name('store');
+        Route::get('/{letter}/edit', [OutgoingLetterController::class, 'edit'])->name('edit');
+        Route::put('/{letter}', [OutgoingLetterController::class, 'update'])->name('update');
+        Route::delete('/{letter}', [OutgoingLetterController::class, 'destroy'])->name('destroy');
+        Route::get('/export', [ExportLetterController::class, 'exportOutgoing'])->name('export');
+    });
 
+    // Attachment
+    Route::delete('/attachment', [AttachmentController::class, 'destroy'])->name('attachment.destroy');
 });

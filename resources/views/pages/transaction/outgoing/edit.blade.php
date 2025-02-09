@@ -13,19 +13,15 @@
                 <input type="hidden" name="id" value="{{ $data->id }}">
                 <input type="hidden" name="type" value="{{ $data->type }}">
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
-                    <x-input-form :value="$data->reference_number" name="reference_number"
-                                  :label="__('model.letter.reference_number')"/>
+                    <x-input-form :value="$data->letter_number" name="letter_number" :label="__('model.letter.letter_number')" readonly/>
+                </div>
+                <div class="col-sm-12 col-12 col-md-6 col-lg-4">
+                    <x-input-form :value="date('Y-m-d', strtotime($data->letter_date))" name="letter_date"
+                                  :label="__('model.letter.letter_date')"
+                                  type="date"/>
                 </div>
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
                     <x-input-form :value="$data->to" name="to" :label="__('model.letter.to')"/>
-                </div>
-                <div class="col-sm-12 col-12 col-md-6 col-lg-4">
-                    <x-input-form :value="$data->agenda_number" name="agenda_number"
-                                  :label="__('model.letter.agenda_number')"/>
-                </div>
-                <div class="col-sm-12 col-12 col-md-6 col-lg-12">
-                    <x-input-form :value="date('Y-m-d', strtotime($data->letter_date))" name="letter_date" :label="__('model.letter.letter_date')"
-                                  type="date"/>
                 </div>
                 <div class="col-sm-12 col-12 col-md-12 col-lg-12">
                     <x-input-textarea-form :value="$data->description" name="description"
@@ -51,7 +47,8 @@
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
                     <div class="mb-3">
                         <label for="attachments" class="form-label">{{ __('model.letter.attachment') }}</label>
-                        <input type="file" class="form-control @error('attachments') is-invalid @enderror" id="attachments"
+                        <input type="file" class="form-control @error('attachments') is-invalid @enderror"
+                               id="attachments"
                                name="attachments[]" multiple/>
                         <span class="error invalid-feedback">{{ $errors->first('attachments') }}</span>
                     </div>
@@ -59,11 +56,10 @@
                         @foreach($data->attachments as $attachment)
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <a href="{{ $attachment->path_url }}" target="_blank">{{ $attachment->filename }}</a>
-                                <span
-                                    class="badge bg-danger rounded-pill cursor-pointer btn-remove-attachment"
-                                    data-id="{{ $attachment->id }}">
-                                        <i class="bx bx-trash"></i>
-                                    </span>
+                                <span class="badge bg-danger rounded-pill cursor-pointer btn-remove-attachment"
+                                      data-id="{{ $attachment->id }}">
+                                    <i class="bx bx-trash"></i>
+                                </span>
                             </li>
                         @endforeach
                     </ul>

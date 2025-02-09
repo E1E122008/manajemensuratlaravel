@@ -1,111 +1,75 @@
 @extends('layout.main')
 
 @section('content')
-    <x-breadcrumb
-        :values="[__('menu.transaction.menu'), __('menu.transaction.outgoing_letter')]">
-    </x-breadcrumb>
+<div class="container-fluid">
 
-    <div class="card mb-4">
+    <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ __('menu.transaction.outgoing_letter') }}</h5>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOutgoingLetterModal">
-                <i class="bx bx-plus"></i> Surat Keluar Baru
-            </button>
+            <h5 class="mb-0">Surat Keluar</h5>
+            <div>
+                <a href="{{ route('transaction.outgoing.export') }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+                <a href="{{ route('transaction.outgoing.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Tambah Surat Keluar
+                </a>
+            </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive text-nowrap">
-                <table class="table table-hover">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Tanggal Surat Keluar</th>
+                            <th>No. Surat</th>
+                            <th>Tanggal</th>
                             <th>Perihal</th>
-                            <th>Nomor Surat</th>
-                            <th>Dikeluarkan Oleh</th>
+                            <th>Lampiran</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($outgoingLetters as $index => $letter)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $letter->letter_date->format('d/m/Y') }}</td> <!-- Assuming letter_date is the date of the outgoing letter -->
-                                <td>{{ $letter->description }}</td> <!-- Assuming description is the perihal -->
-                                <td>{{ $letter->reference_number }}</td> <!-- Assuming reference_number is the nomor surat -->
-                                <td>{{ $letter->issued_by }}</td> <!-- Assuming issued_by is the field for dikeluarkan oleh -->
-                                <td>
-                                    <div class="dropdown">
-                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                            <i class="bx bx-dots-vertical-rounded"></i>
-                                        </button>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="{{ route('transaction.outgoing.edit', $letter) }}">
-                                                <i class="bx bx-edit-alt me-1"></i> Edit
-                                            </a>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="deleteOutgoingLetter({{ $letter->id }})">
-                                                <i class="bx bx-trash me-1"></i> Delete
-                                            </a>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td>{{ $outgoingLetters->firstItem() + $index }}</td>
+                            <td>{{ $letter->letter_number }}</td>
+                            <td>{{ $letter->letter_date->format('d/m/Y') }}</td>
+                            <td>{{ $letter->description }}</td>
+                            <td>
+                                @foreach($letter->attachments as $attachment)
+                                    <a href="{{ Storage::url($attachment->path) }}" target="_blank">
+                                        <i class="fas fa-paperclip"></i> {{ $attachment->filename }}
+                                    </a><br>
+                                @endforeach
+                            </td>
+                            <td>
+                                <a href="{{ route('transaction.outgoing.edit', $letter->id) }}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('transaction.outgoing.destroy', $letter->id) }}" 
+                                      method="POST" 
+                                      class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="6" class="text-center">{{ __('menu.general.empty') }}</td>
-                            </tr>
+                        <tr>
+                            <td colspan="6" class="text-center">Tidak ada data</td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+            {{ $outgoingLetters->links() }}
         </div>
     </div>
-
-    <!-- Modal Buat Surat Keluar -->
-    <div class="modal fade" id="createOutgoingLetterModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Buat Surat Keluar Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="outgoingLetterForm" action="{{ route('transaction.outgoing.store') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="form-label">Nomor Surat</label>
-                            <input type="text" class="form-control" name="reference_number" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Perihal</label>
-                            <input type="text" class="form-control" name="description" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Dikeluarkan Oleh</label>
-                            <input type="text" class="form-control" name="issued_by" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tanggal Surat</label>
-                            <input type="date" class="form-control" name="letter_date" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Lampiran</label>
-                            <input type="file" class="form-control" name="attachments[]" multiple>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" form="outgoingLetterForm" class="btn btn-primary">Simpan</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function deleteOutgoingLetter(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                // Implementasi fungsi delete
-            }
-        }
-    </script>
+</div>
 @endsection

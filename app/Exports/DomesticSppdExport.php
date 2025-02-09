@@ -7,11 +7,11 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class ForeignSppdExport implements FromCollection, WithHeadings, WithMapping
+class DomesticSppdExport implements FromCollection, WithHeadings, WithMapping
 {
     public function collection()
     {
-        return Sppd::where('type', 'foreign')
+        return Sppd::where('type', 'domestic')
             ->orderBy('created_at', 'desc')
             ->get();
     }

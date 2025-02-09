@@ -14,44 +14,23 @@
                 <input type="hidden" name="type" value="{{ $data->type }}">
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
                     <x-input-form :value="$data->reference_number" name="reference_number"
-                                  :label="__('model.letter.reference_number')"/>
+                                  :label="__('model.letter.letter_number')" required/>
                 </div>
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
-                    <x-input-form :value="$data->from" name="from" :label="__('model.letter.from')"/>
+                    <x-input-form :value="$data->sender" name="sender" :label="__('model.letter.sender')" required/>
                 </div>
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
-                    <x-input-form :value="$data->agenda_number" name="agenda_number"
-                                  :label="__('model.letter.agenda_number')"/>
-                </div>
-                <div class="col-sm-12 col-12 col-md-6 col-lg-6">
                     <x-input-form :value="date('Y-m-d', strtotime($data->letter_date))" name="letter_date"
                                   :label="__('model.letter.letter_date')"
-                                  type="date"/>
+                                  type="date" required/>
                 </div>
-                <div class="col-sm-12 col-12 col-md-6 col-lg-6">
+                <div class="col-sm-12 col-12 col-md-6 col-lg-4">
                     <x-input-form :value="date('Y-m-d', strtotime($data->received_date))" name="received_date"
-                                  :label="__('model.letter.received_date')" type="date"/>
+                                  :label="__('model.letter.received_date')" type="date" required/>
                 </div>
-                <div class="col-sm-12 col-12 col-md-12 col-lg-12">
+                <div class="col-sm-12 col-12 col-md-12 col-lg-8">
                     <x-input-textarea-form :value="$data->description" name="description"
-                                           :label="__('model.letter.description')"/>
-                </div>
-                <div class="col-sm-12 col-12 col-md-6 col-lg-4">
-                    <div class="mb-3">
-                        <label for="classification_code"
-                               class="form-label">{{ __('model.letter.classification_code') }}</label>
-                        <select class="form-select" id="classification_code" name="classification_code">
-                            @foreach($classifications as $classification)
-                                <option
-                                    @selected(old('classification_code', $data->classification_code) == $classification->code)
-                                    value="{{ $classification->code }}"
-                                >{{ $classification->type }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-sm-12 col-12 col-md-6 col-lg-4">
-                    <x-input-form :value="$data->note ?? ''" name="note" :label="__('model.letter.note')"/>
+                                           :label="__('model.letter.description')" required/>
                 </div>
                 <div class="col-sm-12 col-12 col-md-6 col-lg-4">
                     <div class="mb-3">
@@ -65,11 +44,10 @@
                         @foreach($data->attachments as $attachment)
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <a href="{{ $attachment->path_url }}" target="_blank">{{ $attachment->filename }}</a>
-                                    <span
-                                        class="badge bg-danger rounded-pill cursor-pointer btn-remove-attachment"
-                                        data-id="{{ $attachment->id }}">
-                                        <i class="bx bx-trash"></i>
-                                    </span>
+                                <span class="badge bg-danger rounded-pill cursor-pointer btn-remove-attachment"
+                                      data-id="{{ $attachment->id }}">
+                                    <i class="bx bx-trash"></i>
+                                </span>
                             </li>
                         @endforeach
                     </ul>

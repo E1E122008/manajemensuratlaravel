@@ -20,6 +20,11 @@ class Letter extends Model
      */
     protected $fillable = [
         'reference_number',
+        'sender',
+        'letter_number',
+        'month',
+        'year',
+        'auto_number',
         'agenda_number',
         'from',
         'to',
@@ -27,9 +32,9 @@ class Letter extends Model
         'received_date',
         'description',
         'note',
-        'type',
         'classification_code',
-        'user_id',
+        'type',
+        'user_id'
     ];
 
     /**
@@ -149,5 +154,25 @@ class Letter extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(Attachment::class, 'letter_id', 'id');
+    }
+
+    public static function generateOutgoingNumber()
+    {
+        $year = date('Y');
+        $month = date('m');
+        
+        $lastNumber = self::where('type', 'outgoing')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->max('auto_number');
+            
+        $newNumber = ($lastNumber ?? 0) + 1;
+        
+        return [
+            'letter_number' => "100.3.2/{$newNumber}/{$month}/{$year}",
+            'auto_number' => $newNumber,
+            'month' => $month,
+            'year' => $year
+        ];
     }
 }

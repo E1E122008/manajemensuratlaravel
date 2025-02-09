@@ -14,53 +14,56 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">SPPD Dalam Daerah</h5>
+            <div>
+                <a href="{{ route('sppd.domestic.export') }}" class="btn btn-success">
+                    <i class="bx bx-export"></i> Export Excel
+                </a>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSppdModal">
+                    <i class="bx bx-plus"></i> Buat SPPD Baru
+                </button>
+            </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive text-nowrap">
+            <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Nomor SPPD</th>
+                            <th>No. Surat</th>
                             <th>Tanggal</th>
-                            <th>Nama yang bertugas</th>
-                            <th>Tujuan</th>
-                            <th>perihal</th>
-                            <th>Tanggal Berangkat</th>
-                            <th>Tanggal Kembali</th>
+                            <th>Perihal</th>
+                            <th>Nama yang Ditugaskan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="table-border-bottom-0">
+                    <tbody>
                         @forelse($sppds as $index => $sppd)
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $sppd->nomor_sppd }}</td>
                             <td>{{ $sppd->tanggal->format('d/m/Y') }}</td>
-                            <td>{{ $sppd->nama_yang_bertugas}}</td>
-                            <td>{{ $sppd->tujuan }}</td>
                             <td>{{ $sppd->perihal }}</td>
-                            <td>{{ $sppd->tanggal_berangkat->format('d/m/Y') }}</td>
-                            <td>{{ $sppd->tanggal_kembali->format('d/m/Y') }}</td>
+                            <td>{{ $sppd->nama_yang_bertugas }}</td>
                             <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                <div class="btn-group">
+                                    <a href="{{ route('sppd.domestic.print', $sppd->id) }}" 
+                                       class="btn btn-sm btn-info" target="_blank">
+                                        <i class="bx bx-printer"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-warning"
+                                            onclick="editSppd({{ $sppd->id }})">
+                                        <i class="bx bx-edit"></i>
                                     </button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="editSppd({{ $sppd->id }})">
-                                            <i class="bx bx-edit-alt me-1"></i> Edit
-                                        </a>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="deleteSppd({{ $sppd->id }})">
-                                            <i class="bx bx-trash me-1"></i> Delete
-                                        </a>
-                                    </div>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="deleteSppd({{ $sppd->id }})">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="text-center">Tidak ada data</td>
+                            <td colspan="6" class="text-center">Tidak ada data</td>
                         </tr>
                         @endforelse
                     </tbody>

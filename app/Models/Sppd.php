@@ -46,4 +46,44 @@ class Sppd extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public static function generateDomesticNumber()
+    {
+        $year = date('Y');
+        $month = date('m');
+        
+        $lastNumber = self::where('type', 'domestic')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->max('auto_number');
+            
+        $newNumber = ($lastNumber ?? 0) + 1;
+        
+        return [
+            'nomor_sppd' => "100.3.5.4/{$newNumber}/DD/BH/{$month}/{$year}",
+            'auto_number' => $newNumber,
+            'month' => $month,
+            'year' => $year
+        ];
+    }
+
+    public static function generateForeignNumber()
+    {
+        $year = date('Y');
+        $month = date('m');
+        
+        $lastNumber = self::where('type', 'foreign')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->max('auto_number');
+            
+        $newNumber = ($lastNumber ?? 0) + 1;
+        
+        return [
+            'nomor_sppd' => "000.1.2.3/{$newNumber}/LD/BH/{$month}/{$year}",
+            'auto_number' => $newNumber,
+            'month' => $month,
+            'year' => $year
+        ];
+    }
 } 

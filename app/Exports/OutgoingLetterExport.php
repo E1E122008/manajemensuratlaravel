@@ -2,16 +2,16 @@
 
 namespace App\Exports;
 
-use App\Models\Sppd;
+use App\Models\Letter;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class ForeignSppdExport implements FromCollection, WithHeadings, WithMapping
+class OutgoingLetterExport implements FromCollection, WithHeadings, WithMapping
 {
     public function collection()
     {
-        return Sppd::where('type', 'foreign')
+        return Letter::where('type', 'outgoing')
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -23,25 +23,21 @@ class ForeignSppdExport implements FromCollection, WithHeadings, WithMapping
             'Nomor Surat',
             'Tanggal',
             'Perihal',
-            'Nama yang Ditugaskan',
-            'Tanggal Berangkat',
-            'Tanggal Kembali'
+            'Lampiran'
         ];
     }
 
-    public function map($sppd): array
+    public function map($letter): array
     {
         static $no = 0;
         $no++;
         
         return [
             $no,
-            $sppd->nomor_sppd,
-            $sppd->tanggal->format('d/m/Y'),
-            $sppd->perihal,
-            $sppd->nama_yang_bertugas,
-            $sppd->tanggal_berangkat->format('d/m/Y'),
-            $sppd->tanggal_kembali->format('d/m/Y')
+            $letter->letter_number,
+            $letter->letter_date->format('d/m/Y'),
+            $letter->description,
+            $letter->attachments->count() . ' file'
         ];
     }
 } 

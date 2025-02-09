@@ -7,54 +7,56 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">SPT Luar Daerah</h5>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSptModal">
-                <i class="bx bx-plus"></i> Buat SPT Baru
-            </button>
+            <div>
+                <a href="{{ route('spt.foreign.export') }}" class="btn btn-success">
+                    <i class="bx bx-export"></i> Export Excel
+                </a>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSptModal">
+                    <i class="bx bx-plus"></i> Buat SPT Baru
+                </button>
+            </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive text-nowrap">
+            <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>No</th>
+                            <th>No. Surat</th>
                             <th>Tanggal</th>
-                            <th>Nomor SPT</th>
-                            <th>Pegawai</th>
-                            <th>Tujuan</th>
-                            <th>Keperluan</th>
-                            <th>Lama Tugas</th>
+                            <th>Perihal</th>
+                            <th>Nama yang Ditugaskan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="table-border-bottom-0">
+                    <tbody>
                         @forelse($spts as $index => $spt)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $spt->tanggal->format('d/m/Y') }}</td>
                             <td>{{ $spt->nomor_spt }}</td>
-                            <td>{{ $spt->employee->nama ?? '-' }}</td>
-                            <td>{{ $spt->tujuan }}</td>
-                            <td>{{ $spt->keperluan }}</td>
-                            <td>{{ $spt->lama_tugas }} hari</td>
+                            <td>{{ $spt->tanggal->format('d/m/Y') }}</td>
+                            <td>{{ $spt->perihal }}</td>
+                            <td>{{ $spt->employee->nama }}</td>
                             <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                <div class="btn-group">
+                                    <a href="{{ route('spt.foreign.print', $spt->id) }}" 
+                                       class="btn btn-sm btn-info" target="_blank">
+                                        <i class="bx bx-printer"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-warning"
+                                            onclick="editSpt({{ $spt->id }})">
+                                        <i class="bx bx-edit"></i>
                                     </button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="editSpt({{ $spt->id }})">
-                                            <i class="bx bx-edit-alt me-1"></i> Edit
-                                        </a>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="deleteSpt({{ $spt->id }})">
-                                            <i class="bx bx-trash me-1"></i> Delete
-                                        </a>
-                                    </div>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="deleteSpt({{ $spt->id }})">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center">Tidak ada data</td>
+                            <td colspan="6" class="text-center">Tidak ada data</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -63,7 +65,7 @@
         </div>
     </div>
 
-    <!-- Modal Buat SPT -->
+    <!-- Modal Create SPT -->
     <div class="modal fade" id="createSptModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -76,40 +78,83 @@
                         @csrf
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nomor SPT</label>
-                                <input type="text" class="form-control" name="nomor_spt" required>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" class="form-control" name="tanggal" required>
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pegawai</label>
+                                <select class="form-select" name="employee_id" required>
+                                    <option value="">Pilih Pegawai</option>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->nama }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Pegawai yang Bertugas</label>
-                            <select class="form-select" name="pegawai_id" required>
-                                <option value="">Pilih Pegawai</option>
-                                @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->nama }} - {{ $employee->nip }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Perihal</label>
+                            <textarea class="form-control" name="perihal" rows="3" required></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Tujuan</label>
-                            <input type="text" class="form-control" name="tujuan" required>
+                            <label class="form-label">Lampiran</label>
+                            <input type="file" class="form-control" name="attachments[]" multiple 
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                            <small class="text-muted">Format: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 2MB)</small>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Keperluan</label>
-                            <textarea class="form-control" name="keperluan" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Lama Tugas (Hari)</label>
-                            <input type="number" class="form-control" name="lama_tugas" required min="1">
+                        <div id="preview-container" class="mb-3"></div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" form="sptForm" class="btn btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit SPT -->
+    <div class="modal fade" id="editSptModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit SPT Luar Daerah</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editSptForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tanggal</label>
+                                <input type="date" class="form-control" name="tanggal" id="editTanggal" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pegawai</label>
+                                <select class="form-select" name="employee_id" id="editEmployeeId" required>
+                                    <option value="">Pilih Pegawai</option>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->nama }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Perihal</label>
+                            <textarea class="form-control" name="perihal" id="editPerihal" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lampiran Baru</label>
+                            <input type="file" class="form-control" name="attachments[]" multiple 
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                            <small class="text-muted">Format: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 2MB)</small>
+                        </div>
+                        <div id="edit-preview-container" class="mb-3"></div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -119,7 +164,31 @@
 @push('script')
 <script>
     $(document).ready(function() {
-        $('#sptForm').submit(function(e) {
+        // File preview
+        $('input[name="attachments[]"]').on('change', function(e) {
+            const files = e.target.files;
+            const container = $(this).closest('form').find('.preview-container');
+            container.empty();
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const preview = $('<div class="mb-2"></div>');
+                    if (file.type.startsWith('image/')) {
+                        preview.append(`<img src="${e.target.result}" height="100" class="me-2">`);
+                    }
+                    preview.append(`<span>${file.name}</span>`);
+                    container.append(preview);
+                }
+
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission
+        $('#sptForm').on('submit', function(e) {
             e.preventDefault();
             
             let formData = new FormData(this);
@@ -130,52 +199,93 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
                 success: function(response) {
                     if(response.success) {
-                        $('#createSptModal').modal('hide');
-                        
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil!',
-                            text: 'SPT Luar Daerah berhasil dibuat',
-                            timer: 1500,
-                            showConfirmButton: false
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
                         }).then(() => {
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            text: 'Terjadi kesalahan: ' + response.message
+                            $('#createSptModal').modal('hide');
+                            location.reload();
                         });
                     }
                 },
                 error: function(xhr) {
-                    let errors = xhr.responseJSON.errors;
-                    let errorMessage = '';
+                    let errorMessage = 'Terjadi kesalahan saat menyimpan data';
                     
-                    for(let key in errors) {
-                        errorMessage += errors[key][0] + '\n';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).flat().join('\n');
                     }
                     
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: 'Terjadi kesalahan:\n' + errorMessage
+                        text: errorMessage
+                    });
+                }
+            });
+        });
+
+        // Edit form submission
+        $('#editSptForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let formData = new FormData(this);
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if(response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            $('#editSptModal').modal('hide');
+                            location.reload();
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Terjadi kesalahan saat menyimpan data';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: errorMessage
                     });
                 }
             });
         });
     });
 
+    function editSpt(id) {
+        $.get(`/spt/foreign/${id}/edit`, function(data) {
+            $('#editSptModal').modal('show');
+            $('#editSptForm').attr('action', `/spt/foreign/${id}`);
+            $('#editTanggal').val(data.tanggal);
+            $('#editPerihal').val(data.perihal);
+            $('#editEmployeeId').val(data.employee_id);
+        });
+    }
+
     function deleteSpt(id) {
         Swal.fire({
             title: 'Apakah Anda yakin?',
-            text: "Data SPT akan dihapus permanen!",
+            text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -185,7 +295,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `{{ url('spt/foreign') }}/${id}`,
+                    url: `/spt/foreign/${id}`,
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -194,22 +304,16 @@
                         if(response.success) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Berhasil!',
-                                text: 'SPT berhasil dihapus',
-                                timer: 1500,
-                                showConfirmButton: false
+                                title: 'Terhapus!',
+                                text: response.message,
+                                showConfirmButton: false,
+                                timer: 1500
                             }).then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Oops...',
-                                text: 'Terjadi kesalahan: ' + response.message
+                                location.reload();
                             });
                         }
                     },
-                    error: function(xhr) {
+                    error: function() {
                         Swal.fire({
                             icon: 'error',
                             title: 'Oops...',
@@ -220,10 +324,5 @@
             }
         });
     }
-
-    // Reset form saat modal ditutup
-    $('#createSptModal').on('hidden.bs.modal', function () {
-        $('#sptForm').trigger('reset');
-    });
 </script>
 @endpush 

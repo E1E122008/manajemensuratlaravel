@@ -2,16 +2,17 @@
 
 namespace App\Exports;
 
-use App\Models\Sppd;
+use App\Models\Spt;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class ForeignSppdExport implements FromCollection, WithHeadings, WithMapping
+class DomesticSptExport implements FromCollection, WithHeadings, WithMapping
 {
     public function collection()
     {
-        return Sppd::where('type', 'foreign')
+        return Spt::where('type', 'domestic')
+            ->with('employee')
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -24,24 +25,22 @@ class ForeignSppdExport implements FromCollection, WithHeadings, WithMapping
             'Tanggal',
             'Perihal',
             'Nama yang Ditugaskan',
-            'Tanggal Berangkat',
-            'Tanggal Kembali'
+            'Tanggal Dibuat'
         ];
     }
 
-    public function map($sppd): array
+    public function map($spt): array
     {
         static $no = 0;
         $no++;
         
         return [
             $no,
-            $sppd->nomor_sppd,
-            $sppd->tanggal->format('d/m/Y'),
-            $sppd->perihal,
-            $sppd->nama_yang_bertugas,
-            $sppd->tanggal_berangkat->format('d/m/Y'),
-            $sppd->tanggal_kembali->format('d/m/Y')
+            $spt->nomor_spt,
+            $spt->tanggal->format('d/m/Y'),
+            $spt->perihal,
+            $spt->employee->nama,
+            $spt->created_at->format('d/m/Y')
         ];
     }
 } 
